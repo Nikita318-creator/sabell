@@ -1,0 +1,5 @@
+{
+  "location_detect": "Локация определена",
+  "location_error": "Ошибка геолокации",
+  "countrySelected": "Ваша страна {country} выбрана как дефолтная!"
+}

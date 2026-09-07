@@ -1,0 +1,14 @@
+{
+  "location_detect": "Location detected!",
+  "location_error": "Location error",
+  "countrySelected": "Your country {country} is selected as default!",
+  "@countrySelected": {
+    "description": "Alert message when country is automatically detected",
+    "placeholders": {
+      "country": {
+        "type": "String",
+        "example": "Belarus"
+      }
+    }
+  }
+}

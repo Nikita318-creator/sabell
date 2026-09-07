@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1010242652120",
+    "project_id": "sabell-app",
+    "storage_bucket": "sabell-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1010242652120:android:e5b0bd238bd15eac0c94ad",
+        "android_client_info": {
+          "package_name": "com.example.flutter_sabel"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDySmJnh14nl_41Bgtacy6GsXRDPSStGoY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
