@@ -6,12 +6,6 @@ import 'package:in_app_review/in_app_review.dart';
 import 'package:flutter_sabel/features/settings/logic/bloc/settings_bloc.dart';
 import 'package:flutter_sabel/features/settings/logic/bloc/settings_event.dart';
 import 'package:flutter_sabel/features/settings/logic/bloc/settings_state.dart';
-import 'package:flutter_sabel/features/settings/presentation/keys_master_demo_screen.dart';
-import 'package:flutter_sabel/features/settings/presentation/animated_switcher_demo_screen.dart';
-import 'package:flutter_sabel/features/settings/presentation/test_widget_screen.dart';
-import 'package:flutter_sabel/features/settings/presentation/parent_screen.dart';
-import 'package:flutter_sabel/features/settings/presentation/parent_screen.dart';
-import 'package:flutter_sabel/features/settings/presentation/scrolls_test.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -133,29 +127,6 @@ class SettingsScreen extends StatelessWidget {
               children: [
                 const SizedBox(height: 12),
 
-                // Выбор страны
-                BlocBuilder<SettingsBloc, SettingsState>(
-                  builder: (context, state) {
-                    final country = state is SettingsLoadedState
-                        ? state.selectedCountry
-                        : 'Загрузка...';
-
-                    return _SettingsTile(
-                      title: 'СТРАНА ДОСТАВКИ',
-                      value: country,
-                      onTap: () {
-                        if (state is SettingsLoadedState) {
-                          _showCountryPicker(
-                            context,
-                            state.selectedCountry,
-                            state.availableCountries,
-                          );
-                        }
-                      },
-                    );
-                  },
-                ),
-
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Divider(
@@ -187,28 +158,6 @@ class SettingsScreen extends StatelessWidget {
                     Navigator.of(context).push(
                       CupertinoPageRoute(
                         builder: (_) => const PrivacyPolicyScreen(),
-                      ),
-                    );
-                  },
-                ),
-
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Divider(
-                    height: 1,
-                    thickness: 0.5,
-                    color: Color(0xFFE5E5E5),
-                  ),
-                ),
-
-                _SettingsTile(
-                  title: 'ТЕСТ Screens - I am just plaing here',
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        //CupertinoPageRoute(
-                        builder: (_) =>
-                            ScrollsTestScreen(), // MediaScreen(), // ParentScreen(), // TestWidgetScreen(), //AnimatedSwitcherDemoScreen(), //KeysMasterDemoScreen(),//test111 тут я свои тестовые экраны запускаю
                       ),
                     );
                   },

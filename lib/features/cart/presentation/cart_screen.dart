@@ -49,6 +49,25 @@ class CartScreen extends StatelessWidget {
     );
   }
 
+  void _showContactBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (bottomSheetContext) {
+        return _ContactFormBottomSheet(
+          onSubmit: () {
+            // Запускаем списывание товара и мок-сервис только после успешного заполнения и закрытия окна
+            context.read<CartBloc>().add(const CheckoutCartEvent());
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -93,7 +112,6 @@ class CartScreen extends StatelessWidget {
               final isCheckoutLoading = state is CartCheckoutInProgressState;
 
               if (state is CartLoadedState || isCheckoutLoading) {
-                // Извлекаем список товаров если состояние CartLoadedState
                 final products = state is CartLoadedState
                     ? state.products
                     : <RemoteProducts>[];
@@ -200,11 +218,11 @@ class CartScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 12),
                           const Text(
-                            'Нажимая кнопку «Оплатить корзину», вы соглашаетесь с условиями пользовательского соглашения и возврата.',
+                            'Оформляя заказ, вы ничего не платите. Мы свяжемся с вами по условиям вашего заказа — оплата только при получении.',
                             style: TextStyle(
-                              fontSize: 10,
+                              fontSize: 11,
                               height: 1.4,
-                              color: Color(0xFF888888),
+                              color: Color(0xFF666666),
                               decoration: TextDecoration.none,
                             ),
                           ),
@@ -212,11 +230,7 @@ class CartScreen extends StatelessWidget {
                           GestureDetector(
                             onTap: isCheckoutLoading
                                 ? null
-                                : () {
-                                    context.read<CartBloc>().add(
-                                      const CheckoutCartEvent(),
-                                    );
-                                  },
+                                : () => _showContactBottomSheet(context),
                             child: Container(
                               width: double.infinity,
                               height: 48,
@@ -229,7 +243,7 @@ class CartScreen extends StatelessWidget {
                                       color: Colors.white,
                                     )
                                   : const Text(
-                                      'ОПЛАТИТЬ КОРЗИНУ',
+                                      'Оформить Заказ',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 13,
@@ -256,8 +270,193 @@ class CartScreen extends StatelessWidget {
   }
 }
 
+class _ContactFormBottomSheet extends StatefulWidget {
+  final VoidCallback onSubmit;
+
+  const _ContactFormBottomSheet({required this.onSubmit});
+
+  @override
+  State<_ContactFormBottomSheet> createState() =>
+      _ContactFormBottomSheetState();
+}
+
+class _ContactFormBottomSheetState extends State<_ContactFormBottomSheet> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _telegramController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _viberController = TextEditingController();
+  final TextEditingController _instagramController = TextEditingController();
+  final TextEditingController _whatsappController = TextEditingController();
+
+  bool _isFormValid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController.addListener(_validateForm);
+    _emailController.addListener(_validateForm);
+    _telegramController.addListener(_validateForm);
+    _phoneController.addListener(_validateForm);
+    _viberController.addListener(_validateForm);
+    _instagramController.addListener(_validateForm);
+    _whatsappController.addListener(_validateForm);
+  }
+
+  void _validateForm() {
+    final hasName = _nameController.text.trim().isNotEmpty;
+    final hasAtLeastOneContact =
+        _emailController.text.trim().isNotEmpty ||
+        _telegramController.text.trim().isNotEmpty ||
+        _phoneController.text.trim().isNotEmpty ||
+        _viberController.text.trim().isNotEmpty ||
+        _instagramController.text.trim().isNotEmpty ||
+        _whatsappController.text.trim().isNotEmpty;
+
+    final isValid = hasName && hasAtLeastOneContact;
+
+    if (isValid != _isFormValid) {
+      setState(() {
+        _isFormValid = isValid;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _telegramController.dispose();
+    _phoneController.dispose();
+    _viberController.dispose();
+    _instagramController.dispose();
+    _whatsappController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildField(
+    String label,
+    TextEditingController controller, {
+    TextInputType? keyboardType,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: CupertinoTextField(
+        controller: controller,
+        placeholder: label,
+        keyboardType: keyboardType,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7F7F7),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFE5E5E5)),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 24,
+        bottom: bottomInset + 20,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Детали заказа и связь',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Наш менеджер свяжется с вами в ближайшее время по деталям заказа и обсудит условия самовывоза/доставки. Оплата происходит только при получении товара.',
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.4,
+                color: Color(0xFF666666),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildField('Ваше имя *', _nameController),
+            const Text(
+              'Укажите хотя бы один способ связи:',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF888888),
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildField(
+              'Email',
+              _emailController,
+              keyboardType: TextInputType.emailAddress,
+            ),
+            _buildField('Telegram ID', _telegramController),
+            _buildField(
+              'Номер телефона',
+              _phoneController,
+              keyboardType: TextInputType.phone,
+            ),
+            _buildField(
+              'Viber',
+              _viberController,
+              keyboardType: TextInputType.phone,
+            ),
+            _buildField('Instagram', _instagramController),
+            _buildField(
+              'WhatsApp',
+              _whatsappController,
+              keyboardType: TextInputType.phone,
+            ),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: _isFormValid
+                  ? () {
+                      Navigator.of(context).pop();
+                      widget.onSubmit();
+                    }
+                  : null,
+              child: Container(
+                width: double.infinity,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: _isFormValid ? Colors.black : const Color(0xFFCCCCCC),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  'ПРОДОЛЖИТЬ',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _CartItemTile extends StatelessWidget {
-  final RemoteProducts product; // 👈 Заменили модель на RemoteProducts
+  final RemoteProducts product;
   final VoidCallback onRemove;
 
   const _CartItemTile({required this.product, required this.onRemove});
@@ -316,57 +515,6 @@ class _CartItemTile extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _CheckoutWebViewMockScreen extends StatelessWidget {
-  const _CheckoutWebViewMockScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      child: CupertinoPageScaffold(
-        backgroundColor: Colors.white,
-        navigationBar: const CupertinoNavigationBar(
-          backgroundColor: Colors.white,
-          border: Border(
-            bottom: BorderSide(color: Color(0xFFE5E5E5), width: 0.5),
-          ),
-          middle: Text(
-            'ЭКВАЙРИНГ (МОК)',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.5,
-              decoration: TextDecoration.none,
-            ),
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                CupertinoActivityIndicator(radius: 14, color: Colors.black),
-                SizedBox(height: 16),
-                Text(
-                  'ЗАГРУЗКА ПЛАТЕЖНОГО ШЛЮЗА...',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.0,
-                    color: Color(0xFF777777),
-                    decoration: TextDecoration.none,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

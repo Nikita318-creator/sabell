@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_sabel/features/catalog/data/models/catalog_model.dart';
 import 'package:flutter_sabel/features/catalog/data/repositories/server_product_repository.dart';
-import 'package:flutter_sabel/services/location_service/location_service.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
@@ -11,18 +10,14 @@ import 'home_state.dart';
 // class HomeAppResumedEvent extends HomeEvent { const HomeAppResumedEvent(); }
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
-  final LocationService _locationService;
   final ServerProductRepository _repository;
   static const String _countryKey = 'user_selected_country';
 
   late final AppLifecycleListener _lifecycleListener;
 
-  HomeBloc({
-    LocationService? locationService,
-    required ServerProductRepository repository,
-  }) : _locationService = locationService ?? LocationService(),
-       _repository = repository,
-       super(const HomeInitialState()) {
+  HomeBloc({required ServerProductRepository repository})
+    : _repository = repository,
+      super(const HomeInitialState()) {
     on<LoadHomeDataEvent>(_onLoadHomeData);
     on<HomeAppResumedEvent>(
       _onAppResumed,
@@ -59,13 +54,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final savedCountry = prefs.getString(_countryKey);
 
       if (savedCountry != null && savedCountry.isNotEmpty) {
-        emit(
-          HomeLoadedState(
-            products: products,
-            country: savedCountry,
-            locationStatus: LocationStatus.initial,
-          ),
-        );
+        emit(HomeLoadedState(products: products, country: savedCountry));
       } else {
         emit(HomeLoadedState(products: products));
         add(const CheckLocationEvent());
@@ -93,14 +82,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final savedCountry = prefs.getString(_countryKey);
 
       // 3. Выставляем LocationStatus.initial, чтобы BlocListener НЕ триггерил алерт
-      emit(
-        HomeLoadedState(
-          products: products,
-          country: savedCountry,
-          locationStatus:
-              LocationStatus.initial, // 👈 Алерт отсюда НЕ вызовется
-        ),
-      );
+      emit(HomeLoadedState(products: products, country: savedCountry));
 
       // 4. Если страны ещё НЕТ в кэше (самый первый вход) — запускаем чекер
       if (savedCountry == null || savedCountry.isEmpty) {
@@ -138,36 +120,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   ) async {
     if (state is! HomeLoadedState) return;
     final currentState = state as HomeLoadedState;
-
-    try {
-      final country = await _locationService.getCountryName();
-
-      if (country.trim().isNotEmpty) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(_countryKey, country);
-
-        emit(
-          currentState.copyWith(
-            locationStatus: LocationStatus.success,
-            country: country,
-          ),
-        );
-      } else {
-        emit(
-          currentState.copyWith(
-            locationStatus: LocationStatus.denied,
-            country: null,
-          ),
-        );
-      }
-    } catch (e) {
-      emit(
-        currentState.copyWith(
-          locationStatus: LocationStatus.denied,
-          country: null,
-        ),
-      );
-    }
   }
 
   Future<void> _onSelectManualCountry(
@@ -179,14 +131,5 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_countryKey, event.country);
-
-    emit(currentState.copyWith(locationStatus: LocationStatus.initial));
-
-    emit(
-      currentState.copyWith(
-        locationStatus: LocationStatus.success,
-        country: event.country,
-      ),
-    );
   }
 }
