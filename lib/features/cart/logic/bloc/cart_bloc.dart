@@ -9,7 +9,6 @@ import 'package:flutter_sabel/features/cart/logic/bloc/cart_state.dart';
 class CartBloc extends Bloc<CartEvent, CartState> {
   final ServerProductRepository repository;
 
-  // 🤖 Telegram Bot API Credentials
   static const String _tgBotToken =
       '8737490032:AAGjMSyiuongZJ423hVjSo68Ca2evjvuong';
   static const String _tgChatId = '1059302098';
@@ -65,13 +64,26 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     required List products,
     required double totalPrice,
   }) async {
-    try {
-      final itemsText = products
-          .map((p) => '• ${p.title} — ${p.price.toStringAsFixed(2)} BYN')
-          .join('\n');
+    final itemsText = products
+        .map((p) {
+          final details = <String>[];
+          if (p.articul.toString().isNotEmpty) {
+            details.add('Арт: ${p.articul}');
+          }
+          if (p.size.toString().isNotEmpty) {
+            details.add('Размер: ${p.size}');
+          }
 
-      final message =
-          '''
+          final detailsStr = details.isNotEmpty
+              ? ' (${details.join(', ')})'
+              : '';
+
+          return '• ${p.title}$detailsStr — ${p.price.toStringAsFixed(2)} BYN';
+        })
+        .join('\n');
+
+    final message =
+        '''
 🛍 *НОВЫЙ ЗАКАЗ!*
 
 ${contactInfo.toFormattedString()}
@@ -81,20 +93,21 @@ $itemsText
 💰 *Итого:* ${totalPrice.toStringAsFixed(2)} BYN
 ''';
 
-      final url = Uri.parse(
-        'https://api.telegram.org/bot$_tgBotToken/sendMessage',
-      );
-      await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'chat_id': _tgChatId,
-          'text': message,
-          'parse_mode': 'Markdown',
-        }),
-      );
-    } catch (_) {
-      // Игнорируем сетевые ошибки отправки в ТГ, чтобы списание товара в Firestore все равно завершилось
+    final url = Uri.parse(
+      'https://api.telegram.org/bot$_tgBotToken/sendMessage',
+    );
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'chat_id': _tgChatId,
+        'text': message,
+        'parse_mode': 'Markdown',
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Telegram API error');
     }
   }
 
@@ -115,24 +128,27 @@ $itemsText
     try {
       final productIds = products.map((p) => p.id).toList();
 
-      // 1. Атомарное списание товара в Firestore
-      await repository.checkout(productIds);
-
-      // 2. Отправка уведомления в Telegram бот
+      // 1. Сначала пытаемся отправить вебхук в ТГ
       await _sendTelegramNotification(
         contactInfo: event.contactInfo,
         products: products,
         totalPrice: totalPrice,
       );
 
-      // 3. Очистка локальной корзины
+      // 2. И только если ТГ вернул 200 OK — списываем товар с Firestore
+      await repository.checkout(productIds);
+
+      // 3. Очищаем корзину
       await CartStorage.clearCart();
 
       emit(const CartCheckoutSuccessState());
       add(const LoadCartEvent());
-    } catch (e) {
-      final errorMessage = e.toString().replaceFirst('Exception: ', '');
-      emit(CartErrorState(errorMessage));
+    } catch (_) {
+      emit(
+        const CartErrorState(
+          'Не удалось оформить ваш заказ. Пожалуйста, проверьте правильность введенных данных и попробуйте еще раз. Если возникнут вопросы, вы можете обратиться в поддержку напрямую: nsun60359@gmail.com',
+        ),
+      );
 
       add(const LoadCartEvent());
     }

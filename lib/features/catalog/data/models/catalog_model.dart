@@ -8,6 +8,8 @@ class RemoteProducts {
   final List<String> tags;
   final bool isShowOnHomeScreen;
   final int count;
+  final String articul;
+  final String size;
 
   const RemoteProducts({
     required this.id,
@@ -19,6 +21,8 @@ class RemoteProducts {
     required this.tags,
     this.isShowOnHomeScreen = false,
     required this.count,
+    required this.articul,
+    required this.size,
   });
 
   /// Удобный геттер для получения всех картинок товара (главное фото + дополнительные)
@@ -68,6 +72,8 @@ class RemoteProducts {
       tags: parsedTags,
       isShowOnHomeScreen: json['isShowOnHomeScreen'] as bool? ?? false,
       count: (json['count'] as num?)?.toInt() ?? 0,
+      articul: json['articul'] as String? ?? '',
+      size: json['size'] as String? ?? '',
     );
   }
 }

@@ -23,18 +23,19 @@ class CartLoadedState extends CartState {
   double get totalPrice => products.fold(0, (sum, item) => sum + item.price);
 }
 
-// 👈 Состояние процесса оплаты (для лоадера на кнопке)
 class CartCheckoutInProgressState extends CartState {
   const CartCheckoutInProgressState();
 }
 
-// 👈 Успешная покупка
 class CartCheckoutSuccessState extends CartState {
   const CartCheckoutSuccessState();
 }
 
-// 👈 Ошибка с понятным сообщением для юзера
 class CartErrorState extends CartState {
   final String message;
+
+  // 👈 Геттер для совместимости с `state.errorMessage`
+  String get errorMessage => message;
+
   const CartErrorState(this.message);
 }

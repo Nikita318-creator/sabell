@@ -1,6 +1,9 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_sabel/features/catalog/data/models/catalog_model.dart';
 import 'package:flutter_sabel/features/cart/logic/bloc/cart_bloc.dart';
 import 'package:flutter_sabel/features/cart/logic/bloc/cart_event.dart';
@@ -9,6 +12,17 @@ import 'package:flutter_sabel/features/cart/logic/bloc/cart_state.dart';
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
+  Future<void> _launchEmailSupport() async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: 'nsun60359@gmail.com',
+      queryParameters: {'subject': 'Вопрос по оформлению заказа'},
+    );
+    if (await canLaunchUrl(emailUri)) {
+      await launchUrl(emailUri);
+    }
+  }
+
   void _showErrorDialog(BuildContext context, String message) {
     showCupertinoDialog(
       context: context,
@@ -16,7 +30,34 @@ class CartScreen extends StatelessWidget {
         title: const Text('Не удалось оформить заказ'),
         content: Padding(
           padding: const EdgeInsets.only(top: 8.0),
-          child: Text(message),
+          child: RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: const TextStyle(
+                fontSize: 13,
+                color: Colors.black,
+                height: 1.35,
+              ),
+              children: [
+                const TextSpan(
+                  text:
+                      'Не удалось оформить ваш заказ. Пожалуйста, проверьте правильность введенных данных и попробуйте еще раз. Если возникнут вопросы, вы можете обратиться в поддержку напрямую: ',
+                ),
+                TextSpan(
+                  text: 'nsun60359@gmail.com',
+                  style: const TextStyle(
+                    color: CupertinoColors.activeBlue,
+                    decoration: TextDecoration.underline,
+                  ),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      Navigator.of(ctx).pop();
+                      _launchEmailSupport();
+                    },
+                ),
+              ],
+            ),
+          ),
         ),
         actions: [
           CupertinoDialogAction(
@@ -97,7 +138,7 @@ class CartScreen extends StatelessWidget {
           child: BlocConsumer<CartBloc, CartState>(
             listener: (context, state) {
               if (state is CartErrorState) {
-                _showErrorDialog(context, state.message);
+                _showErrorDialog(context, state.errorMessage);
               } else if (state is CartCheckoutSuccessState) {
                 _showSuccessDialog(context);
               }
@@ -297,13 +338,46 @@ class _ContactFormBottomSheetState extends State<_ContactFormBottomSheet> {
   @override
   void initState() {
     super.initState();
-    _nameController.addListener(_validateForm);
-    _emailController.addListener(_validateForm);
-    _telegramController.addListener(_validateForm);
-    _phoneController.addListener(_validateForm);
-    _viberController.addListener(_validateForm);
-    _instagramController.addListener(_validateForm);
-    _whatsappController.addListener(_validateForm);
+    _loadSavedForm();
+
+    _nameController.addListener(_onFieldChanged);
+    _emailController.addListener(_onFieldChanged);
+    _telegramController.addListener(_onFieldChanged);
+    _phoneController.addListener(_onFieldChanged);
+    _viberController.addListener(_onFieldChanged);
+    _instagramController.addListener(_onFieldChanged);
+    _whatsappController.addListener(_onFieldChanged);
+  }
+
+  Future<void> _loadSavedForm() async {
+    final prefs = await SharedPreferences.getInstance();
+    _nameController.text = prefs.getString('checkout_name') ?? '';
+    _emailController.text = prefs.getString('checkout_email') ?? '';
+    _telegramController.text = prefs.getString('checkout_telegram') ?? '';
+    _phoneController.text = prefs.getString('checkout_phone') ?? '';
+    _viberController.text = prefs.getString('checkout_viber') ?? '';
+    _instagramController.text = prefs.getString('checkout_instagram') ?? '';
+    _whatsappController.text = prefs.getString('checkout_whatsapp') ?? '';
+    _validateForm();
+  }
+
+  Future<void> _saveFormToPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('checkout_name', _nameController.text.trim());
+    await prefs.setString('checkout_email', _emailController.text.trim());
+    await prefs.setString('checkout_telegram', _telegramController.text.trim());
+    await prefs.setString('checkout_phone', _phoneController.text.trim());
+    await prefs.setString('checkout_viber', _viberController.text.trim());
+    await prefs.setString(
+      'checkout_instagram',
+      _instagramController.text.trim(),
+    );
+    await prefs.setString('checkout_whatsapp', _whatsappController.text.trim());
+  }
+
+  void _onFieldChanged() {
+    _validateForm();
+    _saveFormToPrefs();
   }
 
   void _validateForm() {
@@ -327,6 +401,7 @@ class _ContactFormBottomSheetState extends State<_ContactFormBottomSheet> {
 
   @override
   void dispose() {
+    _saveFormToPrefs();
     _nameController.dispose();
     _emailController.dispose();
     _telegramController.dispose();
@@ -444,7 +519,8 @@ class _ContactFormBottomSheetState extends State<_ContactFormBottomSheet> {
               const SizedBox(height: 12),
               GestureDetector(
                 onTap: _isFormValid
-                    ? () {
+                    ? () async {
+                        await _saveFormToPrefs();
                         final contactInfo = OrderContactInfo(
                           name: _nameController.text.trim(),
                           email: _emailController.text.trim(),
@@ -454,8 +530,10 @@ class _ContactFormBottomSheetState extends State<_ContactFormBottomSheet> {
                           instagram: _instagramController.text.trim(),
                           whatsapp: _whatsappController.text.trim(),
                         );
-                        Navigator.of(context).pop();
-                        widget.onSubmit(contactInfo);
+                        if (context.mounted) {
+                          Navigator.of(context).pop();
+                          widget.onSubmit(contactInfo);
+                        }
                       }
                     : null,
                 child: Container(
@@ -514,7 +592,7 @@ class _CartItemTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  product.title,
+                  '${product.title} (${product.size})',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(

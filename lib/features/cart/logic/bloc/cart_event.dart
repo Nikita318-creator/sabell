@@ -23,18 +23,24 @@ class OrderContactInfo {
   String toFormattedString() {
     final buffer = StringBuffer();
     buffer.writeln('👤 *Имя:* $name');
-    if (email != null && email!.isNotEmpty)
+    if (email != null && email!.isNotEmpty) {
       buffer.writeln('📧 *Email:* $email');
-    if (telegram != null && telegram!.isNotEmpty)
+    }
+    if (telegram != null && telegram!.isNotEmpty) {
       buffer.writeln('✈️ *Telegram:* $telegram');
-    if (phone != null && phone!.isNotEmpty)
+    }
+    if (phone != null && phone!.isNotEmpty) {
       buffer.writeln('📞 *Телефон:* $phone');
-    if (viber != null && viber!.isNotEmpty)
+    }
+    if (viber != null && viber!.isNotEmpty) {
       buffer.writeln('🟣 *Viber:* $viber');
-    if (instagram != null && instagram!.isNotEmpty)
+    }
+    if (instagram != null && instagram!.isNotEmpty) {
       buffer.writeln('📸 *Instagram:* $instagram');
-    if (whatsapp != null && whatsapp!.isNotEmpty)
+    }
+    if (whatsapp != null && whatsapp!.isNotEmpty) {
       buffer.writeln('🟢 *WhatsApp:* $whatsapp');
+    }
     return buffer.toString();
   }
 }

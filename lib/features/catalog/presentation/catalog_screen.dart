@@ -178,6 +178,11 @@ class CatalogProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Формируем тайтл с размером
+    final displayTitle = product.size.isNotEmpty
+        ? '${product.title} (${product.size})'
+        : product.title;
+
     return GestureDetector(
       onTap: () {
         Navigator.of(context).push(
@@ -228,7 +233,7 @@ class CatalogProductCard extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              product.title,
+              displayTitle,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
@@ -262,6 +267,9 @@ class CatalogProductDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final images = product.allImages;
+    final displayTitle = product.size.isNotEmpty
+        ? '${product.title} (${product.size})'
+        : product.title;
 
     return BlocProvider<CatalogDetailsBloc>(
       create: (_) => CatalogDetailsBloc(),
@@ -409,7 +417,7 @@ class CatalogProductDetailScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                product.title,
+                                displayTitle,
                                 style: const TextStyle(
                                   fontSize: 16,
                                   height: 1.35,
@@ -418,6 +426,29 @@ class CatalogProductDetailScreen extends StatelessWidget {
                                   decoration: TextDecoration.none,
                                 ),
                               ),
+                              if (product.size.isNotEmpty) ...[
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'РАЗМЕР',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.2,
+                                    color: Color(0xFF888888),
+                                    decoration: TextDecoration.none,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  product.size,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF333333),
+                                    decoration: TextDecoration.none,
+                                  ),
+                                ),
+                              ],
                               const SizedBox(height: 24),
                               Container(
                                 height: 0.5,
@@ -463,7 +494,6 @@ class CatalogProductDetailScreen extends StatelessWidget {
                   ),
                   child: BlocBuilder<CartBloc, CartState>(
                     builder: (context, state) {
-                      // Проверяем наличие товара по списку productIds в CartLoadedState
                       final isInCart =
                           state is CartLoadedState &&
                           state.productIds.contains(product.id);
