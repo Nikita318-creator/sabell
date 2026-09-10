@@ -36,7 +36,9 @@ class CartScreen extends StatelessWidget {
         title: const Text('Успешно!'),
         content: const Padding(
           padding: EdgeInsets.only(top: 8.0),
-          child: Text('Ваш заказ успешно оформлен.'),
+          child: Text(
+            'Ваш заказ успешно оформлен. Наш менеджер скоро свяжется с вами.',
+          ),
         ),
         actions: [
           CupertinoDialogAction(
@@ -53,15 +55,16 @@ class CartScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
+      useRootNavigator: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (bottomSheetContext) {
         return _ContactFormBottomSheet(
-          onSubmit: () {
-            // Запускаем списывание товара и мок-сервис только после успешного заполнения и закрытия окна
-            context.read<CartBloc>().add(const CheckoutCartEvent());
+          onSubmit: (contactInfo) {
+            context.read<CartBloc>().add(CheckoutCartEvent(contactInfo));
           },
         );
       },
@@ -271,7 +274,7 @@ class CartScreen extends StatelessWidget {
 }
 
 class _ContactFormBottomSheet extends StatefulWidget {
-  final VoidCallback onSubmit;
+  final ValueChanged<OrderContactInfo> onSubmit;
 
   const _ContactFormBottomSheet({required this.onSubmit});
 
@@ -340,7 +343,7 @@ class _ContactFormBottomSheetState extends State<_ContactFormBottomSheet> {
     TextInputType? keyboardType,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+      padding: const EdgeInsets.only(bottom: 10.0),
       child: CupertinoTextField(
         controller: controller,
         placeholder: label,
@@ -359,96 +362,126 @@ class _ContactFormBottomSheetState extends State<_ContactFormBottomSheet> {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 24,
-        bottom: bottomInset + 20,
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'Детали заказа и связь',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Наш менеджер свяжется с вами в ближайшее время по деталям заказа и обсудит условия самовывоза/доставки. Оплата происходит только при получении товара.',
-              style: TextStyle(
-                fontSize: 12,
-                height: 1.4,
-                color: Color(0xFF666666),
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildField('Ваше имя *', _nameController),
-            const Text(
-              'Укажите хотя бы один способ связи:',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF888888),
-              ),
-            ),
-            const SizedBox(height: 8),
-            _buildField(
-              'Email',
-              _emailController,
-              keyboardType: TextInputType.emailAddress,
-            ),
-            _buildField('Telegram ID', _telegramController),
-            _buildField(
-              'Номер телефона',
-              _phoneController,
-              keyboardType: TextInputType.phone,
-            ),
-            _buildField(
-              'Viber',
-              _viberController,
-              keyboardType: TextInputType.phone,
-            ),
-            _buildField('Instagram', _instagramController),
-            _buildField(
-              'WhatsApp',
-              _whatsappController,
-              keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: _isFormValid
-                  ? () {
-                      Navigator.of(context).pop();
-                      widget.onSubmit();
-                    }
-                  : null,
-              child: Container(
-                width: double.infinity,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: _isFormValid ? Colors.black : const Color(0xFFCCCCCC),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                alignment: Alignment.center,
-                child: const Text(
-                  'ПРОДОЛЖИТЬ',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.2,
+    return SafeArea(
+      bottom: true,
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: bottomInset > 0 ? bottomInset + 12 : 16,
+        ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDDDDDD),
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
-            ),
-          ],
+              const Text(
+                'Детали заказа и связь',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Наш менеджер свяжется с вами в ближайшее время по деталям заказа и обсудит условия самовывоза/доставки. Оплата происходит только при получении товара.',
+                style: TextStyle(
+                  fontSize: 12,
+                  height: 1.4,
+                  color: Color(0xFF666666),
+                  decoration: TextDecoration.none,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildField('Ваше имя *', _nameController),
+              const Text(
+                'Укажите хотя бы один способ связи:',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF888888),
+                  decoration: TextDecoration.none,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildField(
+                'Email',
+                _emailController,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              _buildField('Telegram ID', _telegramController),
+              _buildField(
+                'Номер телефона',
+                _phoneController,
+                keyboardType: TextInputType.phone,
+              ),
+              _buildField(
+                'Viber',
+                _viberController,
+                keyboardType: TextInputType.phone,
+              ),
+              _buildField('Instagram', _instagramController),
+              _buildField(
+                'WhatsApp',
+                _whatsappController,
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: _isFormValid
+                    ? () {
+                        final contactInfo = OrderContactInfo(
+                          name: _nameController.text.trim(),
+                          email: _emailController.text.trim(),
+                          telegram: _telegramController.text.trim(),
+                          phone: _phoneController.text.trim(),
+                          viber: _viberController.text.trim(),
+                          instagram: _instagramController.text.trim(),
+                          whatsapp: _whatsappController.text.trim(),
+                        );
+                        Navigator.of(context).pop();
+                        widget.onSubmit(contactInfo);
+                      }
+                    : null,
+                child: Container(
+                  width: double.infinity,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: _isFormValid
+                        ? Colors.black
+                        : const Color(0xFFCCCCCC),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'ПРОДОЛЖИТЬ',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
