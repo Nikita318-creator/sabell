@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:in_app_review/in_app_review.dart';
 
-import 'package:flutter_sabel/features/settings/logic/bloc/settings_bloc.dart';
-import 'package:flutter_sabel/features/settings/logic/bloc/settings_event.dart';
-import 'package:flutter_sabel/features/settings/logic/bloc/settings_state.dart';
+import 'package:flutter_sabel/features/settings/presentation/settings_bloc.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -15,87 +13,6 @@ class SettingsScreen extends StatelessWidget {
     if (await inAppReview.isAvailable()) {
       await inAppReview.requestReview();
     }
-  }
-
-  void _showCountryPicker(
-    BuildContext screenContext,
-    String currentCountry,
-    List<String> countries,
-  ) {
-    int selectedIndex = countries.contains(currentCountry)
-        ? countries.indexOf(currentCountry)
-        : 0;
-
-    showCupertinoModalPopup(
-      context: screenContext,
-      builder: (modalContext) => Container(
-        height: 280,
-        color: Colors.white,
-        child: Column(
-          children: [
-            Container(
-              color: const Color(0xFFF8F8F8),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Выберите страну',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                      decoration: TextDecoration.none,
-                    ),
-                  ),
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    child: const Text(
-                      'Готово',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black,
-                      ),
-                    ),
-                    onPressed: () {
-                      final chosenCountry = countries[selectedIndex];
-                      screenContext.read<SettingsBloc>().add(
-                        UpdateCountryEvent(chosenCountry),
-                      );
-                      Navigator.of(modalContext).pop();
-                    },
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: CupertinoPicker(
-                scrollController: FixedExtentScrollController(
-                  initialItem: selectedIndex,
-                ),
-                itemExtent: 40,
-                onSelectedItemChanged: (index) {
-                  selectedIndex = index;
-                },
-                children: countries
-                    .map(
-                      (c) => Center(
-                        child: Text(
-                          c,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   @override

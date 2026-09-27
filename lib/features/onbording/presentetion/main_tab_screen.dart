@@ -65,9 +65,9 @@ class MainTabScreen extends StatelessWidget {
                   label: 'Search',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(CupertinoIcons.slider_horizontal_3),
-                  activeIcon: Icon(CupertinoIcons.slider_horizontal_3),
-                  label: 'Settings',
+                  icon: Icon(CupertinoIcons.person),
+                  activeIcon: Icon(CupertinoIcons.person_fill),
+                  label: 'Profile',
                 ),
               ],
             ),
