@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:flutter_sabel/features/catalog/data/repositories/server_product_repository.dart';
 import 'package:flutter_sabel/features/catalog/data/datasources/server_product_api_client.dart';
-import 'package:flutter_sabel/features/cart/logic/bloc/cart_bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 final sl = GetIt.instance; // sl = Service Locator

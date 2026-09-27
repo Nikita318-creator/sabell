@@ -5,6 +5,8 @@ import 'package:flutter_sabel/features/catalog/data/repositories/server_product_
 import 'package:flutter_sabel/features/cart/data/cart_storage.dart';
 import 'package:flutter_sabel/features/cart/logic/bloc/cart_event.dart';
 import 'package:flutter_sabel/features/cart/logic/bloc/cart_state.dart';
+import 'package:flutter_sabel/features/orders/data/orders_storage.dart';
+import 'package:flutter_sabel/core/events/app_events.dart';
 
 class CartBloc extends Bloc<CartEvent, CartState> {
   final ServerProductRepository repository;
@@ -138,11 +140,26 @@ $itemsText
       // 2. И только если ТГ вернул 200 OK — списываем товар с Firestore
       await repository.checkout(productIds);
 
+      // ---------------------------------------------------------------
+      // 2.5 Сохраняем информацию о заказе локально
+      // ---------------------------------------------------------------
+      final orderItems = products.map((p) {
+        // Укажи здесь точные названия полей твоей модели продукта
+        // (например, p.title или p.name, p.imageUrl или p.image)
+        return OrderItem(
+          title: p.title,
+          imageUrl: p.imageUrl, // Ссылка на картинку товара
+        );
+      }).toList();
+
+      await OrdersStorage.saveOrder(items: orderItems, totalPrice: totalPrice);
+
       // 3. Очищаем корзину
       await CartStorage.clearCart();
 
       emit(const CartCheckoutSuccessState());
       add(const LoadCartEvent());
+      AppEventBus().fire(OrdersUpdatedEvent());
     } catch (_) {
       emit(
         const CartErrorState(

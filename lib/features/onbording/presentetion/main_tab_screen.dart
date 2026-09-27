@@ -52,22 +52,22 @@ class MainTabScreen extends StatelessWidget {
                 BottomNavigationBarItem(
                   icon: Icon(CupertinoIcons.sparkles),
                   activeIcon: Icon(CupertinoIcons.sparkles),
-                  label: 'Home',
+                  label: 'Главная',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(CupertinoIcons.rectangle_grid_2x2),
                   activeIcon: Icon(CupertinoIcons.rectangle_grid_2x2_fill),
-                  label: 'Catalog',
+                  label: 'Каталог',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(CupertinoIcons.search),
                   activeIcon: Icon(CupertinoIcons.search),
-                  label: 'Search',
+                  label: 'Поиск',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(CupertinoIcons.person),
                   activeIcon: Icon(CupertinoIcons.person_fill),
-                  label: 'Profile',
+                  label: 'Профиль',
                 ),
               ],
             ),
