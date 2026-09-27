@@ -399,6 +399,79 @@ class _ContactFormBottomSheetState extends State<_ContactFormBottomSheet> {
     }
   }
 
+  /// Валидация форматов заполненных полей
+  String? _validateContactsInput() {
+    final email = _emailController.text.trim();
+    final telegram = _telegramController.text.trim();
+    final phone = _phoneController.text.trim();
+    final viber = _viberController.text.trim();
+    final instagram = _instagramController.text.trim();
+    final whatsapp = _whatsappController.text.trim();
+
+    // 1. Проверка Email, если не пустой
+    if (email.isNotEmpty) {
+      final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+      if (!emailRegex.hasMatch(email)) {
+        return 'Введите корректный адрес электронной почты (например, example@mail.com).';
+      }
+    }
+
+    // 2. Проверка Телефона, если не пустой
+    if (phone.isNotEmpty) {
+      final digits = phone.replaceAll(RegExp(r'\D'), '');
+      if (digits.length < 5) {
+        return 'Укажите корректный номер телефона.';
+      }
+    }
+
+    // 3. Проверка WhatsApp
+    if (whatsapp.isNotEmpty) {
+      final digits = whatsapp.replaceAll(RegExp(r'\D'), '');
+      if (digits.length < 5) {
+        return 'Укажите корректный номер WhatsApp.';
+      }
+    }
+
+    // 4. Проверка Viber
+    if (viber.isNotEmpty) {
+      final digits = viber.replaceAll(RegExp(r'\D'), '');
+      if (digits.length < 5) {
+        return 'Укажите корректный номер Viber.';
+      }
+    }
+
+    // 5. Проверка Telegram
+    if (telegram.isNotEmpty && telegram.length < 2) {
+      return 'Укажите корректный Telegram ID или никнейм.';
+    }
+
+    // 6. Проверка Instagram
+    if (instagram.isNotEmpty && instagram.length < 2) {
+      return 'Укажите корректный аккаунт Instagram.';
+    }
+
+    return null;
+  }
+
+  void _showValidationErrorDialog(String message) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Ошибка ввода'),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Text(message),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('OK'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _saveFormToPrefs();
@@ -520,6 +593,12 @@ class _ContactFormBottomSheetState extends State<_ContactFormBottomSheet> {
               GestureDetector(
                 onTap: _isFormValid
                     ? () async {
+                        final validationError = _validateContactsInput();
+                        if (validationError != null) {
+                          _showValidationErrorDialog(validationError);
+                          return;
+                        }
+
                         await _saveFormToPrefs();
                         final contactInfo = OrderContactInfo(
                           name: _nameController.text.trim(),
