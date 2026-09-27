@@ -15,12 +15,14 @@ class ServerProductRepositoryImpl implements ServerProductRepository {
 
   @override
   Future<List<RemoteProducts>> getProducts({bool forceRefresh = false}) async {
-    if (_cachedProducts != null && !forceRefresh) {
-      return _cachedProducts!;
+    if (_cachedProducts == null || forceRefresh) {
+      _cachedProducts = await apiClient.fetchProducts();
     }
-    final products = await apiClient.fetchProducts();
-    _cachedProducts = products;
-    return products;
+
+    // Создаем копию кэшированного списка и перемешиваем ее,
+    // чтобы не мутировать исходный _cachedProducts
+    final shuffledList = List<RemoteProducts>.from(_cachedProducts!)..shuffle();
+    return shuffledList;
   }
 
   @override

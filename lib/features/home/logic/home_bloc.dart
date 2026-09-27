@@ -11,7 +11,6 @@ import 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final ServerProductRepository _repository;
-  static const String _countryKey = 'user_selected_country';
 
   late final AppLifecycleListener _lifecycleListener;
 
@@ -19,11 +18,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     : _repository = repository,
       super(const HomeInitialState()) {
     on<LoadHomeDataEvent>(_onLoadHomeData);
-    on<HomeAppResumedEvent>(
-      _onAppResumed,
-    ); // 👈 Новый обработчик для полного перезапуска
-    on<CheckLocationEvent>(_onCheckLocation);
-    on<SelectManualCountryEvent>(_onSelectManualCountry);
+    on<HomeAppResumedEvent>(_onAppResumed);
     on<HomePullToRefreshEvent>(_onHomePullToRefresh);
 
     // При возврате из бэкграунда вызываем полный сброс и перезагрузку
@@ -44,24 +39,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   ) async {
     emit(const HomeLoadingState());
 
-    try {
-      final allProducts = await _repository.getProducts();
-      final products = allProducts
-          .where((product) => product.isShowOnHomeScreen)
-          .toList();
+    final allProducts = await _repository.getProducts();
+    final products = allProducts
+        .where((product) => product.isShowOnHomeScreen)
+        .toList();
 
-      final prefs = await SharedPreferences.getInstance();
-      final savedCountry = prefs.getString(_countryKey);
-
-      if (savedCountry != null && savedCountry.isNotEmpty) {
-        emit(HomeLoadedState(products: products, country: savedCountry));
-      } else {
-        emit(HomeLoadedState(products: products));
-        add(const CheckLocationEvent());
-      }
-    } catch (e) {
-      emit(HomeErrorState(errorMessage: 'Не удалось загрузить каталог: $e'));
-    }
+    emit(HomeLoadedState(products: products));
   }
 
   Future<void> _onAppResumed(
@@ -78,16 +61,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           .where((product) => product.isShowOnHomeScreen)
           .toList();
 
-      final prefs = await SharedPreferences.getInstance();
-      final savedCountry = prefs.getString(_countryKey);
-
       // 3. Выставляем LocationStatus.initial, чтобы BlocListener НЕ триггерил алерт
-      emit(HomeLoadedState(products: products, country: savedCountry));
-
-      // 4. Если страны ещё НЕТ в кэше (самый первый вход) — запускаем чекер
-      if (savedCountry == null || savedCountry.isEmpty) {
-        add(const CheckLocationEvent());
-      }
+      emit(HomeLoadedState(products: products));
     } catch (e) {
       emit(HomeErrorState(errorMessage: 'Не удалось обновить каталог: $e'));
     }
@@ -112,24 +87,5 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     } catch (e) {
       emit(HomeErrorState(errorMessage: 'Не удалось обновить каталог: $e'));
     }
-  }
-
-  Future<void> _onCheckLocation(
-    CheckLocationEvent event,
-    Emitter<HomeState> emit,
-  ) async {
-    if (state is! HomeLoadedState) return;
-    final currentState = state as HomeLoadedState;
-  }
-
-  Future<void> _onSelectManualCountry(
-    SelectManualCountryEvent event,
-    Emitter<HomeState> emit,
-  ) async {
-    if (state is! HomeLoadedState) return;
-    final currentState = state as HomeLoadedState;
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_countryKey, event.country);
   }
 }

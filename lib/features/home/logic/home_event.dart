@@ -9,16 +9,6 @@ class LoadHomeDataEvent extends HomeEvent {
   const LoadHomeDataEvent();
 }
 
-class CheckLocationEvent extends HomeEvent {
-  const CheckLocationEvent();
-}
-
-class SelectManualCountryEvent extends HomeEvent {
-  final String country;
-
-  const SelectManualCountryEvent({required this.country});
-}
-
 class HomePullToRefreshEvent extends HomeEvent {
   const HomePullToRefreshEvent();
 }

@@ -16,23 +16,19 @@ class HomeLoadingState extends HomeState {
 
 class HomeLoadedState extends HomeState {
   final List<RemoteProducts> products; // 👈 Меняем тип на RemoteProducts
-  final String? country;
 
-  const HomeLoadedState({required this.products, this.country});
+  const HomeLoadedState({required this.products});
 
   HomeLoadedState copyWith({
     List<RemoteProducts>? products, // 👈 Меняем тип на RemoteProducts
     String? country,
   }) {
-    return HomeLoadedState(
-      products: products ?? this.products,
-      country: country ?? this.country,
-    );
+    return HomeLoadedState(products: products ?? this.products);
   }
 
   // Явный метод для сброса страны в null без костылей
   HomeLoadedState resetCountry() {
-    return HomeLoadedState(products: products, country: null);
+    return HomeLoadedState(products: products);
   }
 }
 
