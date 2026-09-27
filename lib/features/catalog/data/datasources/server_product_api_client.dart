@@ -3,13 +3,34 @@ import '../models/catalog_model.dart';
 
 abstract class ServerProductApiClient {
   Future<List<RemoteProducts>> fetchProducts();
-  Future<void> checkoutProducts(List<String> productIds); // 👈 Новый метод
+  Future<void> checkoutProducts(List<String> productIds);
+  Future<void> seedMockProducts(List<Map<String, dynamic>> mockList);
 }
 
 class ServerProductApiClientImpl implements ServerProductApiClient {
   final FirebaseFirestore firestore;
 
   ServerProductApiClientImpl({required this.firestore});
+
+  // test111 заливаем на бек товары!
+  ///////// ======== /////////
+
+  // В ServerProductApiClientImpl:
+  Future<void> seedMockProducts(List<Map<String, dynamic>> mockList) async {
+    final batch = firestore.batch();
+    final collection = firestore.collection('products');
+
+    for (final data in mockList) {
+      // Генерим ссылку на новый документ с авто-ID
+      final docRef = collection.doc();
+      batch.set(docRef, data);
+    }
+
+    // Отправляем все 10 документов одним атомарным запросом
+    await batch.commit();
+  }
+
+  ///////// ======== /////////
 
   @override
   Future<List<RemoteProducts>> fetchProducts() async {
