@@ -8,7 +8,7 @@ workflows:
       groups:
         - app_store_credentials
       vars:
-        BUNDLE_ID: "com.flutdemotestapp.app"
+        BUNDLE_ID: "sabbell.leon.newappbundleid"
         XCODE_PROJECT: "ios/Runner.xcodeproj"
         XCODE_SCHEME: "Runner"
       flutter: stable
