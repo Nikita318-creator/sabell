@@ -8,6 +8,8 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>SAIBEL</string>
+	<key>NSUserTrackingUsageDescription</key>
+    <string>Мы используем ваш рекламный идентификатор для предоставления более релевантного контента и аналитики.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

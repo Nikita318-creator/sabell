@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_sabel/l10n/app_localizations.dart'; // Импорт локализации
+import 'package:flutter_sabel/l10n/app_localizations.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart'; // Импорт пакета ATT
 
 import 'features/onbording/presentetion/main_tab_screen.dart';
 import 'features/onbording/presentetion/onbording_screen.dart';
 import 'package:flutter_sabel/core/di/injection_container.dart';
 import 'firebase_options.dart';
-
-import 'package:flutter_sabel/features/catalog/data/datasources/server_product_api_client.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,17 +18,39 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await initDependencies();
 
-  // test111 заливаем на бек товары!
-  // await uploadMocksToFirebase(sl<ServerProductApiClient>());
-  ///////// ======== /////////
-
   runApp(MyApp(isOnboardingCompleted: isOnboardingCompleted));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final bool isOnboardingCompleted;
 
   const MyApp({super.key, required this.isOnboardingCompleted});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Запрашиваем разрешение ATT после построения первого кадра (только для iOS)
+    WidgetsBinding.instance.addPostFrameCallback((_) => initPlugin());
+  }
+
+  Future<void> initPlugin() async {
+    // Проверяем статус ATT (актуально только для iOS 14.5+)
+    final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+
+    // Если статус еще не определен (notDetermined), показываем системный диалог
+    if (status == TrackingStatus.notDetermined) {
+      // Можно опционально показать кастомный экран-объяснение (custom rationale dialog) перед этим
+      await Future.delayed(const Duration(milliseconds: 200));
+      final authorizationStatus =
+          await AppTrackingTransparency.requestTrackingAuthorization();
+      print("Статус ATT после запроса: $authorizationStatus");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +58,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: isOnboardingCompleted
+      home: widget.isOnboardingCompleted
           ? const MainTabScreen()
           : const OnboardingScreen(),
     );
